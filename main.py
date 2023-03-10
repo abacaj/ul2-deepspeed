@@ -38,4 +38,6 @@ if __name__ == "__main__":
         "tensor_parallel": {"tp_size": world_size},
     }
 
+    log(local_rank, "Loading model...")
     model, tokenizer = load_model(conf)
+    log(local_rank, "Model loaded")
