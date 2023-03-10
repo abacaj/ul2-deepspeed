@@ -30,14 +30,15 @@ def log(rank, *msg):
     print(*msg)
 
 
-def monitor_memory(rank, interval=10):
+def monitor_memory(rank, interval=30):
     def log_mem():
+        monitor_memory(rank, interval)
         process = psutil.Process(os.getpid())
         cpu_mem = round(process.memory_info().rss / 1024**2, 2)
         gpu_mem = get_gpu_mem(rank)
         print(f"rank: {rank}, cpu: {cpu_mem}MB, gpu: {gpu_mem}MB")
 
-    Timer(30.0, log_mem).start()
+    Timer(interval, log_mem).start()
 
 
 if __name__ == "__main__":
