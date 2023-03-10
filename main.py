@@ -31,12 +31,13 @@ def log(rank, *msg):
 
 
 def monitor_memory(rank, interval=10):
-    process = psutil.Process(os.getpid())
-    cpu_mem = round(process.memory_info().rss / 1024**2, 2)
-    gpu_mem = get_gpu_mem(rank)
-    print(f"rank: {rank}, cpu: {cpu_mem}MB, gpu: {gpu_mem}MB")
+    def log_mem():
+        process = psutil.Process(os.getpid())
+        cpu_mem = round(process.memory_info().rss / 1024**2, 2)
+        gpu_mem = get_gpu_mem(rank)
+        print(f"rank: {rank}, cpu: {cpu_mem}MB, gpu: {gpu_mem}MB")
 
-    Timer(30.0, monitor_memory).start()
+    Timer(30.0, log_mem).start()
 
 
 if __name__ == "__main__":
