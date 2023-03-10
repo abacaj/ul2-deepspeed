@@ -1,5 +1,5 @@
 import torch
-import os
+import os, psutil
 import deepspeed
 import torch.distributed as dist
 import threading
@@ -33,6 +33,7 @@ def log(rank, *msg):
 def monitor_memory(rank, interval=10):
     def func_wrapper():
         monitor_memory(rank, interval)
+        process = psutil.Process(os.getpid())
         cpu_mem = round(process.memory_info().rss / 1024**2, 2)
         gpu_mem = get_gpu_mem(rank)
         print(f"rank: {rank}, cpu: {cpu_mem}MB, gpu: {gpu_mem}MB")
