@@ -2,6 +2,7 @@ import torch
 import os
 import deepspeed
 import torch.distributed as dist
+import threading
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, AutoConfig, set_seed
 from transformers.models.t5.modeling_t5 import T5Block
 
@@ -19,11 +20,26 @@ def load_model(conf):
     return model.module, tokenizer
 
 
+def get_gpu_mem(device_id):
+    return round(torch.cuda.memory_allocated(device_id) / 1024**2, 2)
+
+
 def log(rank, *msg):
     if rank != 0:
         return
     print(*msg)
 
+
+def monitor_memory(rank, interval=10):
+    def func_wrapper():
+        monitor_memory(rank, interval)
+        cpu_mem = round(process.memory_info().rss / 1024**2, 2)
+        gpu_mem = get_gpu_mem(rank)
+        print(f"rank: {rank}, cpu: {cpu_mem}MB, gpu: {gpu_mem}MB")
+
+    t = threading.Timer(interval, func_wrapper)
+    t.start()
+    return t
 
 if __name__ == "__main__":
     set_seed(42)
@@ -39,5 +55,7 @@ if __name__ == "__main__":
     }
 
     log(local_rank, "Loading model...")
+    monitor_memory(local_rank)
+
     model, tokenizer = load_model(conf)
     log(local_rank, "Model loaded")
