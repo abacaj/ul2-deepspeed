@@ -2,7 +2,7 @@ import torch
 import os, psutil
 import deepspeed
 import torch.distributed as dist
-import threading
+from threading import Timer
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, AutoConfig, set_seed
 from transformers.models.t5.modeling_t5 import T5Block
 
@@ -31,16 +31,13 @@ def log(rank, *msg):
 
 
 def monitor_memory(rank, interval=10):
-    def func_wrapper():
-        monitor_memory(rank, interval)
-        process = psutil.Process(os.getpid())
-        cpu_mem = round(process.memory_info().rss / 1024**2, 2)
-        gpu_mem = get_gpu_mem(rank)
-        print(f"rank: {rank}, cpu: {cpu_mem}MB, gpu: {gpu_mem}MB")
+    process = psutil.Process(os.getpid())
+    cpu_mem = round(process.memory_info().rss / 1024**2, 2)
+    gpu_mem = get_gpu_mem(rank)
+    print(f"rank: {rank}, cpu: {cpu_mem}MB, gpu: {gpu_mem}MB")
 
-    t = threading.Timer(interval, func_wrapper)
-    t.start()
-    return t
+    Timer(30.0, monitor_memory).start()
+
 
 if __name__ == "__main__":
     set_seed(42)
